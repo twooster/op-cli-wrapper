@@ -1,0 +1,80 @@
+#!/bin/bash
+set -eo pipefail
+
+OP_DIR="$HOME/.op"
+OP_CONFIG="$OP_DIR/config"
+OP_SESSION_PREFIX="$OP_DIR/session_"
+
+cmd=
+needs_session=1
+account=
+
+args=()
+while [[ $# -gt 0 ]] ; do
+  arg=$1
+  shift
+
+  case "$arg" in
+  --help|--version|--session=*)
+    needs_session=0
+    ;;
+  --account=*)
+    account=${arg#--account=}
+    ;;
+  --*)
+    ;;
+  encode|signin|signout|update)
+    if [[ -z "$cmd" ]]; then
+      cmd=$arg
+      needs_session=0
+    fi
+    ;;
+  *)
+    if [[ -z "$cmd" ]]; then
+      cmd=$arg
+    fi
+  esac
+
+  args+=("$arg")
+done
+
+if [[ -z "$cmd" ]]; then
+  needs_session=0
+fi
+
+
+if [[ "$needs_session" = 1 ]] ; then
+  umask=$( umask )
+  umask 077
+  if [[ ! -d "$OP_DIR" ]] ; then
+    mkdir -p "$OP_DIR"
+  fi
+
+  if [[ -z "$account" ]] ; then
+    if [[ -f "$OP_CONFIG" ]] ; then
+      account=$( cat "$OP_CONFIG" | awk '/^\s*"latest_signin"\s*:\s*"(.*)"\s*,?\s*$/ { print gensub(/^\s*"latest_signin"\s*:\s*"(.*)"\s*,?\s*$/, "\\1", 1) }' )
+    fi
+
+    if [[ -z "$account" ]] ; then
+      echo "Could not determine account to use; you probably need to sign in for the first time."
+      exit 1
+    fi
+  fi
+
+  SESSION_FILE="${OP_SESSION_PREFIX}${account}"
+  if [[ -f "$SESSION_FILE" ]] ; then
+    SESSION=$( cat "$SESSION_FILE" )
+    if [[ -z "$SESSION" ]] || ! op get account --session="$SESSION" >/dev/null 2>&1 ; then
+      SESSION=$( op signin --output=raw )
+      echo "$SESSION" > "$SESSION_FILE"
+    fi
+  else
+    SESSION=$( op signin --output=raw )
+    echo "$SESSION" > "$SESSION_FILE"
+  fi
+  umask "$umask"
+
+  op "${args[@]}" --session="$SESSION"
+else
+  op "${args[@]}"
+fi
