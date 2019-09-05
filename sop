@@ -1,6 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
+OP_BIN=${OP_BIN:-$( command -v op )}
 OP_DIR="$HOME/.op"
 OP_CONFIG="$OP_DIR/config"
 OP_SESSION_PREFIX="$OP_DIR/session_"
@@ -65,16 +66,16 @@ if [[ "$needs_session" = 1 ]] ; then
   if [[ -f "$SESSION_FILE" ]] ; then
     SESSION=$( cat "$SESSION_FILE" )
     if [[ -z "$SESSION" ]] || ! op get account --session="$SESSION" >/dev/null 2>&1 ; then
-      SESSION=$( op signin --output=raw )
+      SESSION=$( "$OP_BIN" signin --output=raw )
       echo "$SESSION" > "$SESSION_FILE"
     fi
   else
-    SESSION=$( op signin --output=raw )
+    SESSION=$( "$OP_BIN" signin --output=raw )
     echo "$SESSION" > "$SESSION_FILE"
   fi
   umask "$umask"
 
-  op "${args[@]}" --session="$SESSION"
+  "$OP_BIN" "${args[@]}" --session="$SESSION"
 else
-  op "${args[@]}"
+  "$OP_BIN" "${args[@]}"
 fi
