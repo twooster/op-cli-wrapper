@@ -66,11 +66,11 @@ if [[ "$needs_session" = 1 ]] ; then
   if [[ -f "$SESSION_FILE" ]] ; then
     SESSION=$( cat "$SESSION_FILE" )
     if [[ -z "$SESSION" ]] || ! op get account --session="$SESSION" >/dev/null 2>&1 ; then
-      SESSION=$( "$OP_BIN" signin --output=raw )
+      SESSION=$( "$OP_BIN" signin "$account" --output=raw )
       echo "$SESSION" > "$SESSION_FILE"
     fi
   else
-    SESSION=$( "$OP_BIN" signin --output=raw )
+    SESSION=$( "$OP_BIN" signin "$account" --output=raw )
     echo "$SESSION" > "$SESSION_FILE"
   fi
   umask "$umask"
