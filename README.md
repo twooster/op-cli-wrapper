@@ -14,6 +14,10 @@ You can use it just like `op`. Have fun.
 1. Install the 1Password CLI: https://1password.com/downloads/command-line/ somewhere in your `$PATH`
 2. Install this tool somewhere in your path, too
 
+If you want to be really special, you can modify the `sop` tool to point at the
+actual `op` bin (or set `OP_BIN` in your environment), and you can then put
+this tool in your path as `op`. It will then drop seamlessly into any tooling
+you have that uses the `op` binary.
 
 ## Usage
 
